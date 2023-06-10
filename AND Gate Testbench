@@ -1,0 +1,18 @@
+`timescale 1ns / 1ps
+module tb_andGate();
+
+    reg a,b;
+    wire f;
+    
+    andGate UUT1(a,b,f);
+    
+    initial
+        begin
+            a = 0;
+            b = 0;
+            #5 a = 1;
+            #5 b = 1;
+            #5 a = 0;
+            #5 b = 0;
+    end
+endmodule
