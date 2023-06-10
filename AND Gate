@@ -1,0 +1,4 @@
+module andGate(input a, b, output f);
+
+    and U1(f,a,b);
+endmodule
