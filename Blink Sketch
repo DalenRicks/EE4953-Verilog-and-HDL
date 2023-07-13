@@ -1,0 +1,17 @@
+`timescale 1ns / 1ps
+
+module blinky(
+    input clk_i,
+    output LED
+    );
+    
+    wire clk_i;
+    reg LED;
+    wire div_clk;
+    
+    clock_divider(clk_i, div_clk);
+    
+    always@ (posedge div_clk) begin
+        LED <= ~LED;
+    end
+endmodule
