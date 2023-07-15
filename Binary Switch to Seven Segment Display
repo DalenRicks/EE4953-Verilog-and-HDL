@@ -1,0 +1,126 @@
+`timescale 1ns / 1ps
+//////////////////////////////////////////////////////////////////////////////////
+// Company: University of Texas at San Antonio 
+// Engineer: Dalen Ricks
+// 
+// Create Date: 07/15/2023 05:39:42 PM
+// Design Name: Switch to SSG
+// Module Name: swnumber
+// Project Name: Switch to Seven Segment Display Converter
+// Target Devices: 
+// Tool Versions: 
+// Description: 
+// 
+// Dependencies: 
+// 
+// Revision:
+// Revision 0.01 - File Created
+// Additional Comments:
+// 
+//////////////////////////////////////////////////////////////////////////////////
+
+
+module swnumber(
+input clk_i,
+input [15:0] SW,
+output [15:0] LED,
+output [7:0] disp_seg_o,
+output [7:0] disp_an_o
+);
+
+reg [7:0] seg, seg0, seg1, seg2, seg3, seg4;
+reg [7:0] loc;
+reg [19:0] counter;
+reg [19:0] d;
+
+//counter for the clock division later
+always@(posedge clk_i) begin
+    counter = counter + 1;
+end
+
+//Encoding the switch configuration in the temporary variable
+always@(SW) begin
+    d[3:0] <= SW % 10;
+    d[7:4] <= (SW/10) % 10;
+    d[11:8] <= (SW/100) % 10;
+    d[15:12] <= (SW/1000) % 10;
+    d[19:16] <= (SW/10000) % 10;
+end
+
+
+//A function to turn on the correct lights on the seven segment display for a given value
+task sw_seg(input [3:0]a, output [7:0]s);
+    begin
+        case(a[3:0])
+            4'b0000: s = 8'b1100_0000; //0
+            4'b0001: s = 8'b1111_1001; //1
+            4'b0010: s = 8'b1010_0100; //2
+            4'b0011: s = 8'b1011_0000; //3
+            
+            4'b0100: s = 8'b1001_1001; //4
+            4'b0101: s = 8'b1001_0010; //5
+            4'b0110: s = 8'b1000_0010; //6
+            4'b0111: s = 8'b1111_1000; //7
+            
+            4'b1000: s = 8'b1000_0000; //8
+            4'b1001: s = 8'b1001_0000; //9
+        endcase
+    end
+endtask
+
+//assinging the display values when the switches change value
+always@(d) begin
+    sw_seg(d[3:0], seg0);
+    sw_seg(d[7:4], seg1);
+    sw_seg(d[11:8], seg2);
+    sw_seg(d[15:12], seg3);
+    sw_seg(d[19:16], seg4);
+end
+
+
+//Sharing the "on time" among the 5 displays
+always@(counter[19:17]) begin
+    case(counter[19:17])
+        3'b000: begin
+            loc = 8'b1111_1110;
+            seg = seg0;
+        end
+        3'b010: begin
+            loc = 8'b1111_1101;
+            seg = seg1;
+        end
+        3'b100: begin
+            loc = 8'b1111_1011;
+            seg = seg2;
+        end
+        3'b110: begin
+            loc = 8'b1111_0111;
+            seg = seg3;
+        end
+        3'b001: begin
+            loc = 8'b1110_1111;
+            seg = seg4;
+        end
+        3'b011: begin
+            loc = 8'b1101_1111;
+            seg = 8'hff;
+        end
+        3'b101: begin
+            loc = 8'b1011_1111;
+            seg = 8'hff;
+        end
+        3'b111: begin
+            loc = 8'b0111_1111;
+            seg = 8'hff;
+        end    
+    endcase    
+end
+
+
+//Assinging the on switches to the LEDs
+assign LED = SW;
+
+//Assigning the seven segment display configuration to the appropreate display
+assign disp_seg_o = seg;
+assign disp_an_o = loc;
+endmodule
